@@ -27,7 +27,7 @@ bool FindCorners(cv::Mat& frame, std::vector<cv::Point2f>& img_corners, cv::Size
     return found;
 }
 
-cv::Size board_size(6, 9);
+cv::Size board_size(7, 7);
 std::vector<cv::Point2f> img_corners;
 
 
@@ -55,6 +55,9 @@ int main(int argc, char const *argv[]) {
         // 验证找角点
         corners_found = FindCorners(frame, img_corners, board_size);
 
+        cv::Mat frame_copy;
+        frame.copyTo(frame_copy);
+
         cv::imshow("233", frame);
 
         if (corners_found) {
@@ -72,7 +75,7 @@ int main(int argc, char const *argv[]) {
         }
         else if (key == 's') {
             save_path = GetNextPath();
-            cv::imwrite(save_path, frame);
+            cv::imwrite(save_path, frame_copy);
             cout<<"save to :"<<save_path<<endl;
         }
         else if (key == 'd') {        
