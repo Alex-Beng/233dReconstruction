@@ -21,6 +21,14 @@ string GetNextPath() {
     return t_s;
 }
 
+bool FindCorners(cv::Mat& frame, std::vector<cv::Point2f>& img_corners, cv::Size board_size) {
+    bool found;
+    found = cv::findChessboardCorners(frame, board_size, img_corners);
+    return found;
+}
+
+cv::Size board_size(6, 9);
+std::vector<cv::Point2f> img_corners;
 
 
 int main(int argc, char const *argv[]) {
@@ -36,6 +44,7 @@ int main(int argc, char const *argv[]) {
     cv::VideoCapture cp(open_cam_idx);
     cv::Mat frame;
     string save_path;
+    bool corners_found;
     while (true) {
         cp >> frame;
         if (frame.empty()) {
@@ -43,7 +52,20 @@ int main(int argc, char const *argv[]) {
             cp.open(open_cam_idx);
             continue;
         }
+        // 验证找角点
+        corners_found = FindCorners(frame, img_corners, board_size);
+
         cv::imshow("233", frame);
+
+        if (corners_found) {
+            cv::drawChessboardCorners(frame, board_size, img_corners, corners_found);
+        }
+        else {
+            cv::drawChessboardCorners(frame, board_size, img_corners, corners_found);
+        }
+        cv::imshow("corners", frame);
+
+        
         char key = cv::waitKey(1);
         if (key == 'q') {
             break;
