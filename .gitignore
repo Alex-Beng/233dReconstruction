@@ -4,3 +4,4 @@ Pic
 *.txt
 *.sh
 .vscode
+*.param

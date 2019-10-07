@@ -12,6 +12,8 @@ int main()
 {
     ifstream fin("filenamess.txt"); /* 标定所用图像文件的路径 */
     ofstream fout("caliberation_result_qingyun.txt");  /* 保存标定结果的文件 */
+    ofstream Rs_out("./ExtParams/Rs.param");
+    ofstream ts_out("./ExtParams/ts.param");
                                                //读取每一幅图像，从中提取出角点，然后对角点进行亚像素精确化  
     cout << "开始提取角点………………";
     int image_count = 0;  /* 图像数量 */
@@ -163,6 +165,20 @@ int main()
     fout << distCoeffs << endl << endl << endl;
     for (int i = 0; i<image_count; i++)
     {
+        ts_out  <<tvecsMat[i].at<float>(0, 0)<<' '
+                <<tvecsMat[i].at<float>(0, 1)<<' '
+                <<tvecsMat[i].at<float>(0, 2)<<endl;
+
+        Rs_out  <<rvecsMat[i].at<float>(0, 0)<<' '
+                <<rvecsMat[i].at<float>(0, 1)<<' '
+                <<rvecsMat[i].at<float>(0, 2)<<' '
+                <<rvecsMat[i].at<float>(1, 0)<<' '
+                <<rvecsMat[i].at<float>(1, 1)<<' '
+                <<rvecsMat[i].at<float>(1, 2)<<' '
+                <<rvecsMat[i].at<float>(2, 0)<<' '
+                <<rvecsMat[i].at<float>(2, 1)<<' '
+                <<rvecsMat[i].at<float>(2, 2)<<endl;
+        
         fout << "第" << i + 1 << "幅图像的旋转向量：" << endl;
         fout << tvecsMat[i] << endl;
         /* 将旋转向量转换为相对应的旋转矩阵 */
