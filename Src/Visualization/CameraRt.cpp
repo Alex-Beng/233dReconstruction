@@ -18,6 +18,7 @@ void ReadRt(string file_path,
         t_line_ss << t_line;
         for (int i=0; i<3; i++) {
             t_line_ss >> t_t[i];
+            t_t[i] /= 100;
         }
         cout<<t_t<<endl;
         ts.push_back(t_t);
@@ -47,7 +48,7 @@ void VisualRt(std::vector<cv::Mat>& Rs,
     viz::WCoordinateSystem world_coor(1.0);
     
     window.showWidget("World",world_coor);
-
+    window.spinOnce(1, false);
     for (int i=0; i<ts.size(); i++) {
         viz::WCoordinateSystem camer_coor(0.5);
         cv::Mat r_vec = cv::Mat::zeros(1, 3, CV_32F);
