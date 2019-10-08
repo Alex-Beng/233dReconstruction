@@ -5,3 +5,5 @@ Pic
 *.sh
 .vscode
 *.param
+*.jpg
+*.png
