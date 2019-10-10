@@ -1,3 +1,8 @@
+/**
+ * run like  
+ *  ./demo.out yaya.txt -w=5 -h=7 -sl=0.04 -ml=0.02 -d=0 -sc=true -ci=0 -rs=true
+ * */
+
 #include <opencv2/highgui.hpp>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/aruco/charuco.hpp>
@@ -125,7 +130,7 @@ int main(int argc, char *argv[]) {
     float markerLength = parser.get<float>("ml");
     int dictionaryId = parser.get<int>("d");
     string outputFile = parser.get<string>(0);
-    cout<<squaresX<<' '<<squaresY<<' '<<squareLength<<' '<<markerLength<<' '<<dictionaryId;
+    // cout<<squaresX<<' '<<squaresY<<' '<<squareLength<<' '<<markerLength<<' '<<dictionaryId;
 
     bool showChessboardCorners = parser.get<bool>("sc");
 
@@ -208,8 +213,26 @@ int main(int argc, char *argv[]) {
         image.copyTo(imageCopy);
         if(ids.size() > 0) aruco::drawDetectedMarkers(imageCopy, corners);
 
-        if(currentCharucoCorners.total() > 0)
+        if(currentCharucoCorners.total() > 0){
             aruco::drawDetectedCornersCharuco(imageCopy, currentCharucoCorners, currentCharucoIds);
+            cv::Point t_pnt(
+                currentCharucoCorners.at<float>(0, 0),
+                currentCharucoCorners.at<float>(0, 1)
+            );
+            cv::circle(imageCopy, t_pnt, 5, cv::Scalar(0, 0, 255), 3);
+
+            t_pnt = cv::Point(
+                currentCharucoCorners.at<float>(1, 0),
+                currentCharucoCorners.at<float>(1, 1)
+            );
+            cv::circle(imageCopy, t_pnt, 5, cv::Scalar(0, 255, 255), 3); 
+
+            t_pnt = cv::Point(
+                currentCharucoCorners.at<float>(2, 0),
+                currentCharucoCorners.at<float>(2, 1)
+            );
+            cv::circle(imageCopy, t_pnt, 5, cv::Scalar(255, 0, 0), 3); 
+        }
 
         putText(imageCopy, "Press 'c' to add current frame. 'ESC' to finish and calibrate",
                 Point(10, 20), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(255, 0, 0), 2);
@@ -288,7 +311,9 @@ int main(int argc, char *argv[]) {
     repError =
         aruco::calibrateCameraCharuco(allCharucoCorners, allCharucoIds, charucoboard, imgSize,
                                       cameraMatrix, distCoeffs, rvecs, tvecs, calibrationFlags);
-    cout<<tvecs[0].size()<<endl;
+    // cout<<tvecs[0].size()<<endl;
+    for (int i=0; i<allCharucoIds.size(); i++)
+        cout<<allCharucoCorners[i]<<endl<<allCharucoIds[i]<<endl;
     bool saveOk =  saveCameraParams(outputFile, imgSize, aspectRatio, calibrationFlags,
                                     cameraMatrix, distCoeffs, repError);
     if(!saveOk) {
@@ -305,13 +330,25 @@ int main(int argc, char *argv[]) {
     ofstream ts_out("./ExtParams/ts.param");
 
     for (int i=0; i<rvecs.size(); i++) {
-        Rs_out  <<rvecs[i].at<float>(0, 0)<<' '
-                <<rvecs[i].at<float>(0, 1)<<' '
-                <<rvecs[i].at<float>(0, 2)<<endl;
+        Rs_out  <<rvecs[i].at<double>(0, 0)<<' '
+                <<rvecs[i].at<double>(0, 1)<<' '
+                <<rvecs[i].at<double>(0, 2)<<endl;
 
-        ts_out  <<tvecs[i].at<float>(0, 0)<<' '
-                <<tvecs[i].at<float>(0, 1)<<' '
-                <<tvecs[i].at<float>(0, 2)<<endl;
+        ts_out  <<tvecs[i].at<double>(0, 0)<<' '
+                <<tvecs[i].at<double>(0, 1)<<' '
+                <<tvecs[i].at<double>(0, 2)<<endl;
+    }
+    // 保存相机的内参
+    ofstream inp_out("./InParams/in.param");
+    // cout<<cameraMatrix.size()<<' '<<distCoeffs.size()<<endl;
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<3; j++) {
+            inp_out<<cameraMatrix.at<double>(i, j)<<' ';
+        }
+        inp_out<<endl;
+    }
+    for (int i=0; i<5; i++) {
+        inp_out<<distCoeffs.at<double>(0, i)<<' ';
     }
 
     // show interpolated charuco corners for debugging
@@ -324,11 +361,10 @@ int main(int argc, char *argv[]) {
                     aruco::drawDetectedCornersCharuco( imageCopy, allCharucoCorners[frame],
                                                        allCharucoIds[frame]);
                 }
-            }
-
+            }   
             imshow("out", imageCopy);
-            cout<<rvecs[frame]<<endl
-                <<tvecs[frame]<<endl;
+            // cout<<rvecs[frame]<<endl
+            //     <<tvecs[frame]<<endl;
             char key = (char)waitKey(0);
             if(key == 27) break;
         }

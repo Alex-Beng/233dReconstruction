@@ -18,21 +18,18 @@ void ReadRt(string file_path,
         t_line_ss << t_line;
         for (int i=0; i<3; i++) {
             t_line_ss >> t_t[i];
-            t_t[i] /= 100;
         }
         cout<<t_t<<endl;
         ts.push_back(t_t);
     }
 
-    cv::Mat t_R(3, 3, CV_32FC1, cv::Scalar(0));
+    cv::Mat t_R(1, 3, CV_32FC1, cv::Scalar(0));
     while (getline(Rs_in, t_line)) {
         
         stringstream t_line_ss;
         t_line_ss << t_line;
         for (int i=0; i<3; i++) {
-            for (int j=0; j<3; j++) {
-                t_line_ss >> t_R.at<float>(i, j);
-            }
+            t_line_ss >> t_R.at<float>(0, i);
         }
         cout<<t_R<<endl;
         Rs.push_back(t_R);
@@ -51,10 +48,10 @@ void VisualRt(std::vector<cv::Mat>& Rs,
     window.spinOnce(1, false);
     for (int i=0; i<ts.size(); i++) {
         viz::WCoordinateSystem camer_coor(0.5);
-        cv::Mat r_vec = cv::Mat::zeros(1, 3, CV_32F);
-        cv::Mat r_mat;
-        cv::Rodrigues(r_vec, r_mat);
-        Affine3f pose(r_mat, ts[i]);
+        // cv::Mat r_vec = cv::Mat::zeros(1, 3, CV_32F);
+        // cv::Mat r_mat;
+        // cv::Rodrigues(r_vec, r_mat);
+        Affine3f pose(Rs[i], ts[i]);
         
         stringstream t_ss;
         string t_s;
@@ -103,6 +100,7 @@ int main() {
     VisualRt(Rs, ts);
 
     return 0;
+
     viz::Viz3d window("window");
     window.showWidget("Coordinate", viz::WCoordinateSystem());
     //创建平面
