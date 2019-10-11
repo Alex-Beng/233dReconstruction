@@ -106,13 +106,14 @@ int main(int argc, char *argv[]) {
     // viz part
     viz::Viz3d window("window");
     // 世界坐标系
-    viz::WCoordinateSystem world_coor(20.0);
+    viz::WCoordinateSystem world_coor(40.0);
     viz::WPlane plane(cv::Size(100, 100));
+    // viz::WCloud
 
     window.showWidget("World",world_coor);
     window.showWidget("plane", plane);
     
-    viz::WCoordinateSystem camer_coor(10.5);
+    viz::WCoordinateSystem camer_coor(20.5);
 
     while (cp.grab()) {
         cv::Mat frame;
@@ -150,12 +151,17 @@ int main(int argc, char *argv[]) {
                 ori_pnt.push_back(cv::Point3f(0, 0, 0));
                 ori_pnt.push_back(cv::Point3f(0, 100, 0));
                 ori_pnt.push_back(cv::Point3f(100, 0, 0));
+                ori_pnt.push_back(cv::Point3f(0, 0, 100));
                 cv::projectPoints(ori_pnt, R, t, camera_matrix, dist_coeffs, reproj_point);
                 // cout<<reproj_point[0]<<endl;
 
                 cv::circle(frame, reproj_point[0], 5, cv::Scalar(0,255,255), 3);
                 cv::circle(frame, reproj_point[1], 5, cv::Scalar(0,0,0), 3);
                 cv::circle(frame, reproj_point[2], 5, cv::Scalar(0,255,0), 3);
+                cv::circle(frame, reproj_point[3], 5, cv::Scalar(255,255,0), 3);
+                cv::line(frame, reproj_point[0], reproj_point[1], cv::Scalar(0,0,255), 3);
+                cv::line(frame, reproj_point[0], reproj_point[2], cv::Scalar(0,255,0), 3);
+                cv::line(frame, reproj_point[0], reproj_point[3], cv::Scalar(255,0,0), 3);
                 cv::imshow("reproj", frame);
 
                 Affine3f pose(R, t);
