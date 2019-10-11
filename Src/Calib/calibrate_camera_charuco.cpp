@@ -38,7 +38,8 @@ const char* keys  =
         "{zt       | false | Assume zero tangential distortion }"
         "{a        |       | Fix aspect ratio (fx/fy) to this value }"
         "{pc       | false | Fix the principal point at the center }"
-        "{sc       | false | Show detected chessboard corners after calibration }";
+        "{sc       | false | Show detected chessboard corners after calibration }"
+        "{ipo      | ./InParams/in.param | the path to save in params }";
 }
 
 /**
@@ -130,6 +131,7 @@ int main(int argc, char *argv[]) {
     float markerLength = parser.get<float>("ml");
     int dictionaryId = parser.get<int>("d");
     string outputFile = parser.get<string>(0);
+    string ip_out_file = parser.get<string>("ipo");
     // cout<<squaresX<<' '<<squaresY<<' '<<squareLength<<' '<<markerLength<<' '<<dictionaryId;
 
     bool showChessboardCorners = parser.get<bool>("sc");
@@ -339,7 +341,7 @@ int main(int argc, char *argv[]) {
                 <<tvecs[i].at<double>(0, 2)<<endl;
     }
     // 保存相机的内参
-    ofstream inp_out("./InParams/in.param");
+    ofstream inp_out(ip_out_file);
     // cout<<cameraMatrix.size()<<' '<<distCoeffs.size()<<endl;
     for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {

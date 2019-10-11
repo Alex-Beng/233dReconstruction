@@ -93,14 +93,16 @@ const char* keys  =
         "{ci       | 0     | Camera id if input doesnt come from video (-v) }";
 
 void CreatPointCloud(std::vector<cv::Vec3f>& cloud, std::vector<cv::Vec3b>& color) {
-    for (int x=0; x<100; x++) {
+    for (int x=-100; x<0; x++) {
         for (int y=0; y<100; y++) {
-            cloud.push_back(
-                cv::Vec3f(x, y, 0)
-            );
-            color.push_back(
-                cv::Vec3b(0, 255, 0)
-            );
+            for (int z=0; z<100; z++) {
+                cloud.push_back(
+                cv::Vec3f(x, y, z)
+                );
+                color.push_back(
+                    cv::Vec3b(0, 255, 0)
+                );
+            }
         }
     }
 }
@@ -179,6 +181,12 @@ int main(int argc, char *argv[]) {
                 cv::line(frame, reproj_point[0], reproj_point[1], cv::Scalar(0,0,255), 3);
                 cv::line(frame, reproj_point[0], reproj_point[2], cv::Scalar(0,255,0), 3);
                 cv::line(frame, reproj_point[0], reproj_point[3], cv::Scalar(255,0,0), 3);
+
+                cv::projectPoints(cloud, R, t, camera_matrix, dist_coeffs, reproj_point);
+                for (int i=0; i<reproj_point.size(); i++) {
+                    cv::circle(frame, reproj_point[i], 1, cv::Scalar(0, 255, 0), 1);
+                }
+
                 cv::imshow("reproj", frame);
 
                 Affine3f pose(R, t);
