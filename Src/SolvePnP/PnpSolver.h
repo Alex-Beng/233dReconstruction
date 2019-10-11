@@ -12,6 +12,7 @@ using namespace cv;
 
 class PnpSolver {
 public:
+    PnpSolver();
     PnpSolver(int sq_x, int sq_y, double sq_len, double mk_len, int dict_flag, string);
     // 输入图片，若返回true，则解出外参R、t。否则没有
     bool Solve(cv::Mat& image_in, cv::Mat& R, cv::Mat& t);

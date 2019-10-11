@@ -101,6 +101,7 @@ void CreatPointCloud(std::vector<cv::Vec3f>& cloud, std::vector<cv::Vec3b>& colo
                 );
                 color.push_back(
                     cv::Vec3b(0, 255, 0)
+                    // cv::Vec3b(NAN, NAN, NAN)
                 );
             }
         }

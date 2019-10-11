@@ -1,5 +1,9 @@
 #include "PnpSolver.h"
 
+PnpSolver::PnpSolver() {
+    ;
+}
+
 PnpSolver::PnpSolver(int sq_x, int sq_y, double sq_len, double mk_len, int dict_flag, string inp_file_path) {
     sq_x_ = sq_x;
     sq_y_ = sq_y;
