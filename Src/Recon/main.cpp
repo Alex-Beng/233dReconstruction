@@ -16,7 +16,7 @@ void CreatPointCloud(std::vector<cv::Vec3f>& cloud, std::vector<cv::Vec3b>& colo
                 cv::Vec3f(x, y, z)
                 );
                 color.push_back(
-                    cv::Vec3b(0, 255, 0)
+                    cv::Vec3b(0, 0, 0)
                 );
             }
         }
@@ -43,6 +43,7 @@ int main(int argc, char *argv[]) {
     viz::Viz3d window("window");
     viz::WCoordinateSystem world_coor(40.0);
     viz::WPlane plane(cv::Size(200, 200));
+    viz::WCloud* cloud_widget = NULL;
 
     window.showWidget("World",world_coor);
     window.showWidget("plane", plane);
@@ -50,7 +51,7 @@ int main(int argc, char *argv[]) {
     cv::VideoCapture cp(cam_idx);
     cv::Mat frame;
     PnpSolver pnp_solvers(5, 7, 29, 19.5, 0, "../Calib/InParams/in.param");
-    Segmenter segmenters(5, 118, 255, 1);
+    Segmenter segmenters(4, 100, 119, 1);
     std::vector<cv::Mat> Rs;
     std::vector<cv::Mat> ts;
     cv::Mat frame_out;
@@ -59,7 +60,9 @@ int main(int argc, char *argv[]) {
 
         // Get Image
         cp.retrieve(frame);
-        
+        cv::Mat frame_copy;
+        frame.copyTo(frame_copy);
+
         // Solve Pnp Part
         cv::Mat t_R;
         cv::Mat t_t;
@@ -73,6 +76,7 @@ int main(int argc, char *argv[]) {
         }
         
         // 重投影康康
+        
         std::vector<cv::Point3f> ori_pnt;
         std::vector<cv::Point2f> reproj_point;
         ori_pnt.push_back(cv::Point3f(0, 0, 0));
@@ -85,8 +89,8 @@ int main(int argc, char *argv[]) {
         cv::circle(frame, reproj_point[1], 5, cv::Scalar(0,0,0), 3);
         cv::circle(frame, reproj_point[2], 5, cv::Scalar(0,255,0), 3);
         cv::circle(frame, reproj_point[3], 5, cv::Scalar(255,255,0), 3);
-        cv::line(frame, reproj_point[0], reproj_point[1], cv::Scalar(0,0,255), 3);
-        cv::line(frame, reproj_point[0], reproj_point[2], cv::Scalar(0,255,0), 3);
+        cv::line(frame, reproj_point[0], reproj_point[1], cv::Scalar(0,255,0), 3);
+        cv::line(frame, reproj_point[0], reproj_point[2], cv::Scalar(0,0,255), 3);
         cv::line(frame, reproj_point[0], reproj_point[3], cv::Scalar(255,0,0), 3);
 
         cv::imshow("reproj", frame);
@@ -94,7 +98,7 @@ int main(int argc, char *argv[]) {
 
         // Segment Part
         cv::Mat t_binary;
-        segmenters.ImageProcesser(frame, t_binary, frame_out);
+        segmenters.ImageProcesser(frame_copy, t_binary, frame_out);
         cv::imshow("segment", frame_out);
         
 
@@ -104,44 +108,87 @@ int main(int argc, char *argv[]) {
         // }
 
         // std::vector<cv::Point2f> reproj_point;
-        cv::projectPoints(cloud, t_R, t_t, pnp_solvers.camera_matrix_, pnp_solvers.dist_coeffs_, reproj_point);
-
-
-        for (int j=0; j<reproj_point.size(); j++) {
-
-            int t_y = (int)reproj_point[j].y;
-            int t_x = (int)reproj_point[j].x;
-            if (t_x<0 || t_x>=frame.cols || t_y<0 || t_y>=frame.rows) {
-                continue;
-            }
-            if (frame_out.at<uchar>(t_y, t_x) == 255) {
-                cloud_point_valid[j] = false; 
-            }
-        }
-
-        // viz part
-        std::vector<cv::Vec3f> object_cloud;
-        std::vector<cv::Vec3b> object_color;
-        for (int i=0; i<cloud.size(); i++) {
-            if (cloud_point_valid[i]) {
-                object_cloud.push_back(cloud[i]);
-                object_color.push_back(cv::Vec3b(0,255,0));
-            }
-
-        }
-        
-        if (object_cloud.size() == 0) {
-            object_cloud.push_back(cloud[0]);
-            object_color.push_back(cv::Vec3b(0,255,0));
-        }
-        viz::WCloud cloud_widget(object_cloud, object_color);
-        window.showWidget("point_cloud", cloud_widget);
-        window.spinOnce(10, false);
 
         char t_key = cv::waitKey(1);
         if (t_key == 'q') {
             break;
         }
+        else if (t_key == 'c') {
+            cv::projectPoints(cloud, t_R, t_t, pnp_solvers.camera_matrix_, pnp_solvers.dist_coeffs_, reproj_point);
+
+            for (int j=0; j<reproj_point.size(); j++) {
+
+                int t_y = (int)reproj_point[j].y;
+                int t_x = (int)reproj_point[j].x;
+                if (t_x<0 || t_x>=frame.cols || t_y<0 || t_y>=frame.rows) {
+                    continue;
+                }
+                if (frame_out.at<uchar>(t_y, t_x) == 255) {
+                    cloud_point_valid[j] = false; 
+                }
+            }
+        
+            // viz part
+            // channel 0 是距离， 1 是对应点云中的idx
+            cv::Mat camera_dists(frame_copy.rows, frame_copy.cols, CV_64FC2, cv::Scalar(99999999, -1));
+
+            std::vector<cv::Vec3f> object_cloud;
+            std::vector<cv::Vec3b> object_color;
+            std::vector<cv::Vec2i> object_cloud_reproj;
+            for (int i=0; i<cloud.size(); i++) {
+                if (cloud_point_valid[i]) {
+                    object_cloud.push_back(cloud[i]);
+                    object_color.push_back(cv::Vec3b(0,255,0));
+
+                    // 计算体素与相机的距离
+                    double t_dist = sqrt(
+                        (cloud[i][0] - t_t.at<float>(0, 0))*(cloud[i][0] - t_t.at<float>(0, 0)) +
+                        (cloud[i][1] - t_t.at<float>(0, 1))*(cloud[i][1] - t_t.at<float>(0, 1)) +
+                        (cloud[i][2] - t_t.at<float>(0, 2))*(cloud[i][2] - t_t.at<float>(0, 2))
+                    );
+                    cv::Point2i t_pnt = reproj_point[i];
+                    
+                    object_cloud_reproj.push_back(t_pnt);
+                    if (t_pnt.x<0 || t_pnt.x>=camera_dists.cols || t_pnt.y<0 || t_pnt.y>=camera_dists.rows) {
+                        continue;
+                    }
+                    if (t_dist < camera_dists.at<cv::Vec2d>(t_pnt)[0]) {
+                        // cout<<t_pnt<<endl;
+                        camera_dists.at<cv::Vec2d>(t_pnt)[0] = t_dist;
+                        camera_dists.at<cv::Vec2d>(t_pnt)[1] = i;
+                    }
+                }
+
+            }
+
+            // cout<<1<<endl;
+            for (int i=0; i<object_cloud.size(); i++) {
+                cv::Point2i t_reproj = object_cloud_reproj[i];
+                if (t_reproj.x<0 || t_reproj.x>=camera_dists.cols || t_reproj.y<0 || t_reproj.y>=camera_dists.rows) {
+                    continue;
+                }
+                if (camera_dists.at<cv::Vec2d>(t_reproj)[1] != -1) {
+                    object_color[i] = frame_copy.at<cv::Vec3b>(t_reproj);
+                }
+            }
+            // cout<<2<<endl;
+            if (object_cloud.size() == 0) {
+                object_cloud.push_back(cloud[0]);
+                object_color.push_back(cv::Vec3b(0,255,0));
+            }
+            if (cloud_widget == NULL) {
+                cloud_widget = new viz::WCloud(object_cloud, object_color);
+            }
+            else {
+                delete cloud_widget;
+                cloud_widget = new viz::WCloud(object_cloud, object_color);
+            }
+            // cloud_widget = viz::WCloud(object_cloud, object_color);
+        }
+        if (cloud_widget != NULL)
+            window.showWidget("point_cloud", *cloud_widget);
+        window.spinOnce(10, false);
+
     }
 }
 
