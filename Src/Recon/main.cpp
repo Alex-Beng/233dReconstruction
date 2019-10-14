@@ -9,8 +9,8 @@
 #include <Segmenter.h>
 
 void CreatPointCloud(std::vector<cv::Vec3f>& cloud, std::vector<cv::Vec3b>& color) {
-    for (int x=-100; x<0; x+=1) {
-        for (int y=0; y<100; y+=1) {
+    for (int x=-200; x<0; x+=1) {
+        for (int y=0; y<200; y+=1) {
             for (int z=0; z<100; z+=1) {
                 cloud.push_back(
                 cv::Vec3f(x, y, z)
@@ -51,10 +51,17 @@ int main(int argc, char *argv[]) {
     cv::VideoCapture cp(cam_idx);
     cv::Mat frame;
     PnpSolver pnp_solvers(5, 7, 29, 19.5, 0, "../Calib/InParams/in.param");
-    Segmenter segmenters(4, 100, 119, 1);
+    Segmenter segmenters(0, 76, 93, 1);
     std::vector<cv::Mat> Rs;
     std::vector<cv::Mat> ts;
     cv::Mat frame_out;
+
+    cv::namedWindow("set_params", CV_WINDOW_NORMAL);
+    cv::createTrackbar("cnl_idx", "set_params", &segmenters.cnl_flag_, 5);
+    cv::createTrackbar("thre_min", "set_params", &segmenters.thre_min_, 255);
+    cv::createTrackbar("thre_max", "set_params", &segmenters.thre_max_, 255);
+    cv::createTrackbar("cw", "set_params", &segmenters.cw_, 1);
+    
 
     while (cp.grab()) {
 
@@ -99,6 +106,7 @@ int main(int argc, char *argv[]) {
         // Segment Part
         cv::Mat t_binary;
         segmenters.ImageProcesser(frame_copy, t_binary, frame_out);
+        cv::imshow("binary", t_binary);
         cv::imshow("segment", frame_out);
         
 
@@ -138,7 +146,7 @@ int main(int argc, char *argv[]) {
             for (int i=0; i<cloud.size(); i++) {
                 if (cloud_point_valid[i]) {
                     object_cloud.push_back(cloud[i]);
-                    object_color.push_back(cv::Vec3b(0,255,0));
+                    object_color.push_back(color[i]);
 
                     // 计算体素与相机的距离
                     double t_dist = sqrt(
@@ -169,12 +177,13 @@ int main(int argc, char *argv[]) {
                 }
                 if (camera_dists.at<cv::Vec2d>(t_reproj)[1] != -1) {
                     object_color[i] = frame_copy.at<cv::Vec3b>(t_reproj);
+                    color[i] = object_color[i];
                 }
             }
             // cout<<2<<endl;
             if (object_cloud.size() == 0) {
                 object_cloud.push_back(cloud[0]);
-                object_color.push_back(cv::Vec3b(0,255,0));
+                object_color.push_back(color[0]);
             }
             if (cloud_widget == NULL) {
                 cloud_widget = new viz::WCloud(object_cloud, object_color);
