@@ -1,11 +1,13 @@
 *.o
 *.out
 Pic
-*.txt
 *.sh
 .vscode
 *.param
 *.jpg
 *.png
 *.docx
+build
+bin
+lib
 Doc

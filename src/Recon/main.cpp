@@ -5,8 +5,9 @@
 
 // ↑↑沙雕做法↑↑
 // 
-#include <PnpSolver.h>
-#include <Segmenter.h>
+#include "../SolvePnP/PnpSolver.h"
+#include "../Segmentation/Segmenter.h"
+
 
 void CreatPointCloud(std::vector<cv::Vec3f>& cloud, std::vector<cv::Vec3b>& color) {
     for (int x=-200; x<0; x+=1) {
