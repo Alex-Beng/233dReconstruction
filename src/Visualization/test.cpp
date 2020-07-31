@@ -47,28 +47,16 @@ bool DetectCharuco(cv::Mat& frame,
 
 }
 
-void ReadInParams(cv::Mat& camera_matrix, cv::Mat& dist_coeffs) {
-    ifstream inp_in("../Calib/InParams/in.param");
-    
-    camera_matrix = cv::Mat(3, 3, CV_32FC1, cv::Scalar(0));
-    dist_coeffs = cv::Mat(1, 5, CV_32FC1, cv::Scalar(0));
+bool ReadInParams(cv::Mat& camera_matrix, cv::Mat& dist_coeffs, std::string in_file) {
+    cv::FileStorage fs(in_file, cv::FileStorage::READ);
+    if(!fs.isOpened())
+        return false;
+    fs["camera_matrix"] >> camera_matrix;
+    fs["distortion_coefficients"] >> dist_coeffs;
+    camera_matrix.convertTo(camera_matrix, CV_32FC1);
+    dist_coeffs.convertTo(dist_coeffs, CV_32FC1);
 
-    string t_line;
-    for (int i=0; i<3; i++) {
-        getline(inp_in, t_line);
-        stringstream t_line_ss;
-        t_line_ss << t_line;        
-        for (int j=0; j<3; j++) {
-            t_line_ss >> camera_matrix.at<float>(i, j);
-        }
-    }
-    
-    getline(inp_in, t_line);
-    stringstream t_line_ss;
-    t_line_ss << t_line;    
-    for (int i=0; i<5; i++) {
-        t_line_ss >> dist_coeffs.at<float>(0, i);
-    }
+    return true;
 }
 
 // 获得棋盘坐标系下各个角点的坐标
@@ -90,6 +78,7 @@ void GetObjectCoor(
 }
 
 const char* keys  =
+        "{@infile  |<none> | input file with calibrated camera parameters }"
         "{ci       | 0     | Camera id if input doesnt come from video (-v) }";
 
 void CreatPointCloud(std::vector<cv::Vec3f>& cloud, std::vector<cv::Vec3b>& color) {
@@ -110,11 +99,17 @@ void CreatPointCloud(std::vector<cv::Vec3f>& cloud, std::vector<cv::Vec3b>& colo
 
 int main(int argc, char *argv[]) {
     CommandLineParser parser(argc, argv, keys);
+    if (argc < 2) {
+        return 0;
+    }
+
     int cam_id = parser.get<int>("ci");
+    std::string in_file = parser.get<std::string>(0);
 
     cv::Mat camera_matrix;
     cv::Mat dist_coeffs;
-    ReadInParams(camera_matrix, dist_coeffs);
+    ReadInParams(camera_matrix, dist_coeffs, in_file);
+
     cout<<camera_matrix<<dist_coeffs<<endl;
 
     VideoCapture cp;
@@ -130,7 +125,6 @@ int main(int argc, char *argv[]) {
     viz::WCloud cloud_widget(cloud, color);
 
     window.showWidget("World",world_coor);
-    // window.showWidget("plane", plane);
     window.showWidget("point_cloud", cloud_widget);
     
     viz::WCoordinateSystem camer_coor(20.5);
@@ -146,7 +140,7 @@ int main(int argc, char *argv[]) {
         bool valid = DetectCharuco(frame, charuco_corners, charuco_ids);
         if (valid) {
             GetObjectCoor(charuco_ids, object_coors);
-            // cout<<charuco_corners.size()<<' '<<object_coors.size()<<'y'<<endl;
+
             std::vector<cv::Point2f> t_corners;
             for (int i=0; i<object_coors.size(); i++) {
                 cv::Point2f t_pnt = cv::Point2f(charuco_corners.at<float>(i, 0), 

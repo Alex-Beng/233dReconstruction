@@ -38,8 +38,7 @@ const char* keys  =
         "{zt       | false | Assume zero tangential distortion }"
         "{a        |       | Fix aspect ratio (fx/fy) to this value }"
         "{pc       | false | Fix the principal point at the center }"
-        "{sc       | false | Show detected chessboard corners after calibration }"
-        "{ipo      | ./InParams/in.param | the path to save in params }";
+        "{sc       | false | Show detected chessboard corners after calibration }";
 }
 
 /**
@@ -131,8 +130,6 @@ int main(int argc, char *argv[]) {
     float markerLength = parser.get<float>("ml");
     int dictionaryId = parser.get<int>("d");
     string outputFile = parser.get<string>(0);
-    string ip_out_file = parser.get<string>("ipo");
-    // cout<<squaresX<<' '<<squaresY<<' '<<squareLength<<' '<<markerLength<<' '<<dictionaryId;
 
     bool showChessboardCorners = parser.get<bool>("sc");
 
@@ -329,8 +326,8 @@ int main(int argc, char *argv[]) {
     cout << "Calibration saved to " << outputFile << endl;
 
     // 保存相机的外参
-    ofstream Rs_out("./ExtParams/Rs.param");
-    ofstream ts_out("./ExtParams/ts.param");
+    ofstream Rs_out("./Rs.param");
+    ofstream ts_out("./ts.param");
 
     for (int i=0; i<rvecs.size(); i++) {
         Rs_out  <<rvecs[i].at<double>(0, 0)<<' '
@@ -340,18 +337,6 @@ int main(int argc, char *argv[]) {
         ts_out  <<tvecs[i].at<double>(0, 0)<<' '
                 <<tvecs[i].at<double>(0, 1)<<' '
                 <<tvecs[i].at<double>(0, 2)<<endl;
-    }
-    // 保存相机的内参
-    ofstream inp_out(ip_out_file);
-    // cout<<cameraMatrix.size()<<' '<<distCoeffs.size()<<endl;
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<3; j++) {
-            inp_out<<cameraMatrix.at<double>(i, j)<<' ';
-        }
-        inp_out<<endl;
-    }
-    for (int i=0; i<5; i++) {
-        inp_out<<distCoeffs.at<double>(0, i)<<' ';
     }
 
     // show interpolated charuco corners for debugging
@@ -366,8 +351,6 @@ int main(int argc, char *argv[]) {
                 }
             }   
             imshow("out", imageCopy);
-            // cout<<rvecs[frame]<<endl
-            //     <<tvecs[frame]<<endl;
             char key = (char)waitKey(0);
             if(key == 27) break;
         }

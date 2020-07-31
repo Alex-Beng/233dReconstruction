@@ -1,6 +1,6 @@
 # DIP assignment 4 ---- 3d reconstruction
 
-![demostration](./Pic/out-5.gif))
+![demostration](./pic/out-5.gif))
 
 运行环境为 Ubuntu 16.04 + opencv3.4.5 + opencv-contirb3.4.5
 

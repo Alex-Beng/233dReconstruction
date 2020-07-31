@@ -95,7 +95,7 @@ void VisualRt(std::vector<cv::Mat>& Rs,
 int main() {
     std::vector<cv::Mat> Rs;
     std::vector<cv::Vec3f> ts;
-    ReadRt("../Calib/ExtParams/", Rs, ts);
+    ReadRt("./", Rs, ts);
 
     VisualRt(Rs, ts);
 

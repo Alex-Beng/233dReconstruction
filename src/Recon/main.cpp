@@ -1,10 +1,4 @@
-// 创建三个线程，同时读取三个摄像头的图像
-// 然后三个线程解算pnp，求出当前摄像头的外参
-// 求当前摄像头分割图
-// 然后将区域点云返回去三个摄像头图像
 
-// ↑↑沙雕做法↑↑
-// 
 #include "../SolvePnP/PnpSolver.h"
 #include "../Segmentation/Segmenter.h"
 
@@ -26,11 +20,13 @@ void CreatPointCloud(std::vector<cv::Vec3f>& cloud, std::vector<cv::Vec3b>& colo
 
 
 const char* keys  =
+        "{@infile  |<none> | input file with calibrated camera parameters }"
         "{ci       | 0     | camera index }";
 
 int main(int argc, char *argv[]) {
     CommandLineParser parser(argc, argv, keys);
     int cam_idx = parser.get<int>("ci");
+    std::string in_file = parser.get<std::string>(0);
 
     // 重建时候用到的点云
     std::vector<cv::Vec3f> cloud;
@@ -51,7 +47,7 @@ int main(int argc, char *argv[]) {
 
     cv::VideoCapture cp(cam_idx);
     cv::Mat frame;
-    PnpSolver pnp_solvers(5, 7, 29, 19.5, 0, "../Calib/InParams/in.param");
+    PnpSolver pnp_solvers(5, 7, 29, 19.5, 0, in_file);
     Segmenter segmenters(0, 76, 93, 1);
     std::vector<cv::Mat> Rs;
     std::vector<cv::Mat> ts;
