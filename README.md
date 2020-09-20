@@ -1,6 +1,6 @@
 # DIP assignment 4 ---- 3d reconstruction
 
-![demostration](./pic/out-5.gif))
+![demostration](/pic/out-5.gif))
 
 运行环境为 Ubuntu 16.04 + opencv3.4.5 + opencv-contirb3.4.5
 
@@ -14,4 +14,4 @@
    
    其中，物体颜色是通过每次成像，在计算点云中每个点与相机距离，每张图只更新投影到物体区域中某一点离相机最近的点获得的。
 
-PS: 所用的标定板在Src/Visualizaion/下
+PS: 所用的标定板在pic/cali_（也可自己生成，生成使用opencv-contrib的位于modules/aruco/samples/create_board_charuco例程）
